@@ -27,7 +27,9 @@ services:
     container_name: policy-assistant-backend
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/policy_assistant
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      HUGGINGFACE_EMBEDDING_MODEL: ${HUGGINGFACE_EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
       SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       FAISS_INDEX_PATH: /app/data/faiss_index

@@ -10,7 +10,7 @@ All 10 steps have been implemented with production-ready code:
 | Frontend React | 12+ TSX/TS files | ✅ Valid |
 | Database Models | User, Document, ChatHistory | ✅ Valid |
 | API Routes | Auth, Documents, Query, Google Drive | ✅ Valid |
-| Services | RAG Pipeline, Web Search, Embeddings | ✅ Valid |
+| Services | RAG Pipeline (Groq), Web Search, Embeddings (HuggingFace) | ✅ Valid |
 | Docker Config | 6 config files | ✅ Valid |
 
 ---
@@ -20,7 +20,7 @@ All 10 steps have been implemented with production-ready code:
 Before starting, ensure you have:
 
 - [ ] **Docker Desktop** installed (Windows/Mac) OR Docker + Docker Compose (Linux)
-- [ ] **OpenAI API Key** from https://platform.openai.com/api-keys
+- [ ] **Groq API Key** from https://console.groq.com/keys (free tier)
 - [ ] Git (optional, for cloning)
 - [ ] 4GB+ free RAM
 - [ ] Ports 80, 8000, 5432 available
@@ -38,15 +38,18 @@ cd c:\project\ChatbotRag
 # Create environment file
 copy .env.example .env
 
-# Edit .env with your OpenAI key
+# Edit .env with your Groq key
 notepad .env
 ```
 
 **Required in `.env`:**
 ```env
-OPENAI_API_KEY=sk-your-actual-openai-key-here
+GROQ_API_KEY=gsk_your-actual-groq-api-key
+GROQ_MODEL=llama-3.3-70b-versatile
 SECRET_KEY=your-super-secret-key-here
 ```
+
+Embeddings use HuggingFace locally (`sentence-transformers/all-MiniLM-L6-v2`). No embedding API key is required; the first backend start may download ~90MB of model weights.
 
 ### Step 2: Launch with Docker (5 minutes)
 
@@ -60,9 +63,10 @@ docker-compose up -d --build
 
 **First run will:**
 1. Download PostgreSQL, Python, Node images
-2. Install all dependencies
+2. Install all dependencies (including PyTorch + sentence-transformers for embeddings)
 3. Create database tables automatically
 4. Build frontend production bundle
+5. Download the HuggingFace embedding model on first document upload or query (one-time)
 
 ### Step 3: Verify Installation
 
@@ -104,7 +108,7 @@ pip install -r requirements.txt
 
 # 3. Setup environment
 copy .env.example .env
-# Edit .env: Set DATABASE_URL and OPENAI_API_KEY
+# Edit .env: Set DATABASE_URL and GROQ_API_KEY
 
 # 4. Ensure PostgreSQL is running locally
 
@@ -182,11 +186,17 @@ docker-compose logs postgres
 # (docker-compose.yml has healthcheck configured)
 ```
 
-### Issue: "OpenAI API error"
+### Issue: "Groq API error" or chat returns errors
 
-- Verify `OPENAI_API_KEY` in `.env` file
-- Check key has credits at https://platform.openai.com/settings/organization/billing/overview
-- Key format: `sk-...` (51 characters)
+- Verify `GROQ_API_KEY` in `.env` (Docker) or `backend/.env` (local dev)
+- Confirm the key is active at https://console.groq.com/keys
+- Key format: `gsk_...`
+- Try another `GROQ_MODEL` if a model was deprecated (see https://console.groq.com/docs/models)
+
+### Issue: Embeddings slow or fail on first run
+
+- First run downloads `sentence-transformers/all-MiniLM-L6-v2` (~90MB); ensure network access
+- If you migrated from OpenAI embeddings, delete `backend/data/faiss_index` and re-upload documents (vector size changed from 1536 to 384)
 
 ### Issue: Frontend shows "Failed to fetch"
 
@@ -254,7 +264,9 @@ if exist frontend\Dockerfile echo "✅ Frontend Dockerfile exists"
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | ✅ Yes | - | OpenAI API key |
+| `GROQ_API_KEY` | ✅ Yes | - | Groq API key for chat / LLM |
+| `GROQ_MODEL` | ❌ No | `llama-3.3-70b-versatile` | Groq model id |
+| `HUGGINGFACE_EMBEDDING_MODEL` | ❌ No | `sentence-transformers/all-MiniLM-L6-v2` | Local embedding model |
 | `DATABASE_URL` | ✅ Yes (Docker) | Auto-set | PostgreSQL connection |
 | `SECRET_KEY` | ✅ Yes | - | JWT signing key |
 | `GOOGLE_DRIVE_CREDENTIALS_PATH` | ❌ No | - | Google OAuth credentials |

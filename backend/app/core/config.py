@@ -29,10 +29,12 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/policy_assistant"
     
-    # OpenAI
-    OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4"
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-ada-002"
+    # Groq (chat / LLM)
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # HuggingFace (local embeddings)
+    HUGGINGFACE_EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     
     # Vector DB (FAISS)
     FAISS_INDEX_PATH: str = "./data/faiss_index"

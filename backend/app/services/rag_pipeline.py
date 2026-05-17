@@ -7,7 +7,7 @@ import asyncio
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, field
 
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
@@ -85,9 +85,9 @@ class RAGPipeline:
     
     def __init__(self):
         # Initialize LLM
-        self.llm = ChatOpenAI(
-            model_name=settings.OPENAI_MODEL,
-            openai_api_key=settings.OPENAI_API_KEY,
+        self.llm = ChatGroq(
+            model=settings.GROQ_MODEL,
+            groq_api_key=settings.GROQ_API_KEY,
             temperature=0.1,  # Low temperature for factual responses
         )
         

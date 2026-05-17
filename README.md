@@ -7,7 +7,7 @@ A production-ready AI chatbot that answers queries using:
 
 ## Tech Stack
 
-- **Backend:** FastAPI (Python) + LangChain + OpenAI
+- **Backend:** FastAPI (Python) + LangChain + Groq (chat) + HuggingFace (embeddings)
 - **Vector DB:** FAISS
 - **Database:** PostgreSQL (SQLAlchemy)
 - **Frontend:** React + TypeScript + TailwindCSS + Vite
@@ -27,7 +27,7 @@ A production-ready AI chatbot that answers queries using:
 
 ### Prerequisites
 - Docker & Docker Compose
-- OpenAI API Key
+- [Groq API key](https://console.groq.com/keys) (free tier available)
 
 ### 1. Clone & Configure
 
@@ -37,9 +37,12 @@ cd ChatbotRag
 # Copy and edit environment variables
 cp .env.example .env
 
-# Edit .env with your OpenAI API key
-OPENAI_API_KEY=sk-your-api-key
+# Edit .env with your Groq API key
+GROQ_API_KEY=gsk_your-groq-api-key
+GROQ_MODEL=llama-3.3-70b-versatile
 ```
+
+Embeddings run locally via HuggingFace (`sentence-transformers/all-MiniLM-L6-v2` by default). The first backend start may download the model (~90MB); no separate embedding API key is required.
 
 ### 2. Run with Docker
 
@@ -82,7 +85,7 @@ pip install -r requirements.txt
 
 # Setup database (PostgreSQL must be running)
 cp .env.example .env
-# Edit .env with your database URL and OpenAI key
+# Edit .env with your database URL and Groq API key (see backend/.env.example)
 
 # Run
 uvicorn app.main:app --reload
@@ -143,10 +146,21 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENAI_API_KEY` | Yes | OpenAI API key |
+| `GROQ_API_KEY` | Yes | Groq API key for chat / LLM ([console.groq.com](https://console.groq.com/keys)) |
+| `GROQ_MODEL` | No | Groq model id (default: `llama-3.3-70b-versatile`) |
+| `HUGGINGFACE_EMBEDDING_MODEL` | No | Local embedding model (default: `sentence-transformers/all-MiniLM-L6-v2`) |
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `SECRET_KEY` | Yes | JWT secret key |
 | `GOOGLE_DRIVE_CREDENTIALS_PATH` | No | Path to Google credentials.json |
+
+## Groq Setup
+
+1. Sign up at [Groq Console](https://console.groq.com/).
+2. Create an API key under **API Keys**.
+3. Set `GROQ_API_KEY` in `.env` (Docker) or `backend/.env` (local dev).
+4. Optionally change `GROQ_MODEL` — see [supported models](https://console.groq.com/docs/models).
+
+Chat responses use Groq; document embeddings use HuggingFace locally and do not consume Groq quota.
 
 ## Google Drive Setup (Optional)
 
@@ -167,9 +181,15 @@ docker-compose ps
 docker-compose logs postgres
 ```
 
-### OpenAI API Errors
-- Verify `OPENAI_API_KEY` is set correctly in `.env`
-- Check API key has sufficient credits
+### Groq API Errors
+- Verify `GROQ_API_KEY` is set correctly in `.env` or `backend/.env`
+- Confirm the key is active at [console.groq.com](https://console.groq.com/keys)
+- Check rate limits on the free tier; try a different `GROQ_MODEL` if a model is deprecated
+
+### Embedding / HuggingFace Issues
+- First run downloads the embedding model; ensure disk space and network access
+- Set `HUGGINGFACE_EMBEDDING_MODEL` in `backend/.env` to use another [Sentence Transformers](https://huggingface.co/sentence-transformers) model
+- If you changed the embedding model, delete `data/faiss_index` and re-upload documents (vector dimension must match)
 
 ### Frontend Build Issues
 ```bash

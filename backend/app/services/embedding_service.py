@@ -8,8 +8,7 @@ from typing import List, Dict, Optional, Tuple
 
 import faiss
 import numpy as np
-from langchain_openai import OpenAIEmbeddings
-from langchain.schema import Document as LangchainDocument
+from langchain_huggingface import HuggingFaceEmbeddings
 
 from app.core.config import settings
 
@@ -20,12 +19,10 @@ class EmbeddingService:
     """
     
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(
-            model=settings.OPENAI_EMBEDDING_MODEL,
-            openai_api_key=settings.OPENAI_API_KEY,
-        )
+        self.embedding_model = settings.HUGGINGFACE_EMBEDDING_MODEL
+        self.embeddings = HuggingFaceEmbeddings(model_name=self.embedding_model)
         self.index_path = settings.FAISS_INDEX_PATH
-        self.dimension = 1536  # Dimension for text-embedding-ada-002
+        self.dimension = 384  # all-MiniLM-L6-v2 output size
         
         # Ensure data directory exists
         os.makedirs(self.index_path, exist_ok=True)
